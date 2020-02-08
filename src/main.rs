@@ -4,14 +4,15 @@ use piston_window::*;
 mod food;
 mod snake;
 use food::Food;
+use rand::{thread_rng, Rng};
 use snake::{Snake, SnakeDirection};
-use rand::{Rng, thread_rng};
+use std::process::exit;
 
 fn main() {
-    let mut snake = Snake::new();
+    let snake = Snake::new();
     let mut rng = thread_rng();
-    let start_food_x : u8 = rng.gen();
-    let start_food_y : u8 = rng.gen();
+    let start_food_x: u8 = rng.gen();
+    let start_food_y: u8 = rng.gen();
     let mut food = Food::new(start_food_x, start_food_y);
     let mut window: PistonWindow = WindowSettings::new("Rusty Snake", (256, 256))
         .exit_on_esc(true)
@@ -23,19 +24,17 @@ fn main() {
             match button {
                 Keyboard(Key::Up) => {
                     snake.set_direction(SnakeDirection::Up);
-                },
+                }
                 Keyboard(Key::Down) => {
                     snake.set_direction(SnakeDirection::Down);
-                },
+                }
                 Keyboard(Key::Left) => {
                     snake.set_direction(SnakeDirection::Left);
-                },
+                }
                 Keyboard(Key::Right) => {
                     snake.set_direction(SnakeDirection::Right);
-                },
-                _ => {
-
                 }
+                _ => {}
             }
         }
         window.draw_2d(&e, |_c, g, _d| {
@@ -43,6 +42,10 @@ fn main() {
                 snake.eat(food.clone());
                 food.set_x(rng.gen());
                 food.set_y(rng.gen());
+            }
+            if snake.has_collided_with_any_wall() {
+                println!("Game Over!");
+                exit(0);
             }
             snake.walk();
             snake.render(&_c.transform, g);

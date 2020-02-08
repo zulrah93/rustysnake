@@ -4,7 +4,7 @@ use piston_window::{rectangle, G2d};
 pub const FOOD_WIDTH: u8 = 5;
 //Note: snake is built off food
 pub const FOOD_HEIGHT: u8 = 5;
-pub const FOOD_COLOR: [f32; 4] = [255.0, 255.0, 255.0, 255.0] ; // Brown with no alpha
+pub const FOOD_COLOR: [f32; 4] = [255.0, 255.0, 255.0, 255.0]; // Brown with no alpha
 
 #[derive(Clone)]
 pub struct Food {
@@ -20,6 +20,7 @@ impl Food {
         }
     }
 
+    #[allow(dead_code)]
     pub fn blank() -> Self {
         Food { x: None, y: None } // Snake food object exists but can't be drawn yet as the coordinates don't exist
     }

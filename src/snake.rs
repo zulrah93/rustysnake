@@ -7,7 +7,7 @@ use std::vec::Vec;
 pub const SNAKE_SPEED: u8 = 2; // How many pixels to move the snake each frame
 const CLEAR_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 255.0];
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub enum SnakeDirection {
     Left,
     Right,
@@ -59,8 +59,7 @@ impl Snake {
                 let mut food_eaten = self.food_eaten.borrow_mut();
                 food_eaten.push(food.clone());
             }
-        }
-        else {
+        } else {
             food.set_x(self.head_x.get() + FOOD_WIDTH);
             food.set_y(self.head_y.get() + FOOD_HEIGHT);
             let mut food_eaten = self.food_eaten.borrow_mut();
@@ -89,9 +88,16 @@ impl Snake {
         }
     }
 
-    pub fn has_collided(&self) -> bool {
-        // True if snake has collided with wall or itself this triggers game over if this function returns true
-        false
+    pub fn has_collided_with_any_wall(&self) -> bool {
+        let x = self.head_x.get() as i16;
+        let y = self.head_y.get() as i16;
+        if (x - (SNAKE_SPEED as i16)) < 0 || (y - (SNAKE_SPEED as i16)) < 0 {
+            true
+        } else if (x + (SNAKE_SPEED as i16)) > 255 || (y + (SNAKE_SPEED as i16)) > 255 {
+            true
+        } else {
+            false
+        }
     }
 
     pub fn render(&self, transform: &Matrix2d, graphics: &mut G2d) {
@@ -198,4 +204,48 @@ fn test_bounding_box() {
     let r1 = Point::new(10, 0);
     let r2 = Point::new(15, 0);
     assert_eq!(true, collided_with(l1, r1, l2, r2));
+}
+
+#[test]
+fn test_collision_wall() {
+    let snake = Snake::new();
+    snake.head_x.set(2);
+    snake.head_y.set(2);
+    assert_eq!(false, snake.has_collided_with_any_wall());
+    snake.set_direction(SnakeDirection::Left);
+    snake.walk();
+    assert_eq!(true, snake.has_collided_with_any_wall());
+}
+
+#[test]
+fn test_snake_direction() {
+    let snake = Snake::new();
+    snake.set_direction(SnakeDirection::Up);
+    assert_eq!(SnakeDirection::Up, snake.direction.get());
+    snake.set_direction(SnakeDirection::Down);
+    assert_eq!(SnakeDirection::Down, snake.direction.get());
+}
+#[test]
+fn test_snake_walking() {
+    let snake = Snake::new();
+    snake.head_x.set(0);
+    snake.head_y.set(0);
+    snake.set_direction(SnakeDirection::Right);
+    snake.walk();
+    assert_eq!(SNAKE_SPEED, snake.head_x.get());
+    snake.head_x.set(SNAKE_SPEED);
+    snake.head_y.set(0);
+    snake.set_direction(SnakeDirection::Left);
+    snake.walk();
+    assert_eq!(0, snake.head_x.get());
+    snake.head_x.set(0);
+    snake.head_y.set(SNAKE_SPEED);
+    snake.set_direction(SnakeDirection::Up);
+    snake.walk();
+    assert_eq!(0, snake.head_y.get());
+    snake.head_x.set(0);
+    snake.head_y.set(0);
+    snake.set_direction(SnakeDirection::Down);
+    snake.walk();
+    assert_eq!(SNAKE_SPEED, snake.head_y.get());
 }
