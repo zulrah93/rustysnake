@@ -4,11 +4,15 @@ use piston_window::{clear, rectangle, G2d};
 use std::cell::{Cell, RefCell};
 use std::vec::Vec;
 
-pub const SNAKE_SPEED: u8 = 2; // How many pixels to move the snake each frame
+pub const SNAKE_SPEED: u16 = 8; // How many pixels to move the snake each frame
 const CLEAR_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 255.0];
+
+pub const GAME_WIDTH: u32 = 1024;
+pub const GAME_HEIGHT: u32 = 1024;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub enum SnakeDirection {
+    Intial,
     Left,
     Right,
     Up,
@@ -16,24 +20,24 @@ pub enum SnakeDirection {
 }
 
 pub struct Snake {
-    head_x: Cell<u8>,
-    head_y: Cell<u8>,
+    head_x: Cell<u16>,
+    head_y: Cell<u16>,
     direction: Cell<SnakeDirection>,
     food_eaten: RefCell<Vec<Food>>,
 }
 
 impl Snake {
-    fn get_head_x(&self) -> u8 {
+    fn get_head_x(&self) -> u16 {
         // Returns the x position of the snake's head
         self.head_x.get()
     }
 
-    fn get_head_y(&self) -> u8 {
+    fn get_head_y(&self) -> u16 {
         // Returns the y position of the snake's head
         self.head_y.get()
     }
 
-    fn get_tail_x(&self) -> Option<u8> {
+    fn get_tail_x(&self) -> Option<u16> {
         // Returns an Optional x position of the snake's head
         if let Some(tail) = self.food_eaten.borrow().last() {
             tail.get_x()
@@ -42,7 +46,7 @@ impl Snake {
         }
     }
 
-    fn get_tail_y(&self) -> Option<u8> {
+    fn get_tail_y(&self) -> Option<u16> {
         // Returns an Optional y position of the snake's head
         if let Some(tail) = self.food_eaten.borrow().last() {
             tail.get_y()
@@ -54,14 +58,53 @@ impl Snake {
     pub fn eat(&self, mut food: Food) {
         if let Some(x) = self.get_tail_x() {
             if let Some(y) = self.get_tail_y() {
-                food.set_x(x + FOOD_WIDTH);
-                food.set_y(y + FOOD_HEIGHT);
+                match self.direction.get() {
+                    SnakeDirection::Left => {
+                        food.set_x(x - FOOD_WIDTH);
+                        food.set_y(y);
+                    },
+                    SnakeDirection::Right => {
+                        food.set_x(x + FOOD_WIDTH);
+                        food.set_y(y);
+                    },
+                    SnakeDirection::Up => {
+                        food.set_x(x);
+                        food.set_y(y + FOOD_HEIGHT);
+                    },
+                    SnakeDirection::Down => {
+                        food.set_x(x );
+                        food.set_y(y - FOOD_HEIGHT);
+                    },
+                    SnakeDirection::Intial => {
+                        //Do nothing this is so the snake starts stationary
+                        
+                    }
+                }
                 let mut food_eaten = self.food_eaten.borrow_mut();
                 food_eaten.push(food.clone());
             }
         } else {
-            food.set_x(self.head_x.get() + FOOD_WIDTH);
-            food.set_y(self.head_y.get() + FOOD_HEIGHT);
+            match self.direction.get() {
+                SnakeDirection::Left => {
+                    food.set_x(self.head_x.get() - FOOD_WIDTH);
+                    food.set_y(self.head_y.get());
+                },
+                SnakeDirection::Right => {
+                    food.set_x(self.head_x.get() + FOOD_WIDTH);
+                    food.set_y(self.head_y.get());
+                },
+                SnakeDirection::Up => {
+                    food.set_x(self.head_x.get());
+                    food.set_y(self.head_y.get() + FOOD_HEIGHT);
+                },
+                SnakeDirection::Down => {
+                    food.set_x(self.head_x.get());
+                    food.set_y(self.head_y.get() - FOOD_HEIGHT);
+                },
+                SnakeDirection::Intial => {
+                    //Do nothing this is so the snake starts stationary
+                }
+            }
             let mut food_eaten = self.food_eaten.borrow_mut();
             food_eaten.push(food.clone());
         }
@@ -93,7 +136,7 @@ impl Snake {
         let y = self.head_y.get() as i16;
         if (x - (SNAKE_SPEED as i16)) < 0 || (y - (SNAKE_SPEED as i16)) < 0 {
             true
-        } else if (x + (SNAKE_SPEED as i16)) > 255 || (y + (SNAKE_SPEED as i16)) > 255 {
+        } else if (x + (SNAKE_SPEED as i16)) > (GAME_WIDTH as i16) || (y + (SNAKE_SPEED as i16)) > (GAME_HEIGHT as i16) {
             true
         } else {
             false
@@ -105,7 +148,7 @@ impl Snake {
         clear(CLEAR_COLOR, graphics);
         //Render head
         rectangle(
-            FOOD_COLOR,
+            SNAKE_COLOR,
             [
                 self.get_head_x() as f64,
                 self.get_head_y() as f64,
@@ -117,7 +160,7 @@ impl Snake {
         );
         let foods = self.food_eaten.borrow();
         for food in foods.iter() {
-            food.render(transform, graphics);
+            food.render(transform, graphics, true);
         }
     }
 
@@ -131,56 +174,63 @@ impl Snake {
         match self.direction.get() {
             SnakeDirection::Left => {
                 self.head_x.set(self.head_x.get() - SNAKE_SPEED);
-                for food in foods.iter_mut() {
-                    if let Some(x) = food.get_x() {
-                        food.set_x(x - SNAKE_SPEED);
-                    }
+                let mut previous = (self.head_x.get(), self.head_y.get());
+                for food in foods.iter_mut().rev() {
+                    food.set_x(previous.0 -  FOOD_WIDTH - SNAKE_SPEED);
+                    food.set_y(previous.1);
+                    previous = (food.get_x().unwrap(), food.get_y().unwrap());
                 }
             }
             SnakeDirection::Right => {
                 self.head_x.set(self.head_x.get() + SNAKE_SPEED);
-                for food in foods.iter_mut() {
-                    if let Some(x) = food.get_x() {
-                        food.set_x(x + SNAKE_SPEED);
-                    }
+                let mut previous = (self.head_x.get(), self.head_y.get());
+                for food in foods.iter_mut().rev() {
+                    food.set_x(previous.0 +  FOOD_WIDTH + SNAKE_SPEED);
+                    food.set_y(previous.1);
+                    previous = (food.get_x().unwrap(), food.get_y().unwrap());
                 }
             }
             SnakeDirection::Down => {
                 self.head_y.set(self.head_y.get() + SNAKE_SPEED);
-                for food in foods.iter_mut() {
-                    if let Some(y) = food.get_y() {
-                        food.set_y(y + SNAKE_SPEED);
-                    }
+                let mut previous = (self.head_x.get(), self.head_y.get());
+                for food in foods.iter_mut().rev() {
+                    food.set_y(previous.1 +  FOOD_HEIGHT + SNAKE_SPEED);
+                    food.set_x(previous.0);
+                    previous = (food.get_x().unwrap(), food.get_y().unwrap());
                 }
             }
             SnakeDirection::Up => {
                 self.head_y.set(self.head_y.get() - SNAKE_SPEED);
-                for food in foods.iter_mut() {
-                    if let Some(y) = food.get_y() {
-                        food.set_y(y - SNAKE_SPEED);
-                    }
+                let mut previous = (self.head_x.get(), self.head_y.get());
+                for food in foods.iter_mut().rev() {
+                    food.set_y(previous.1 - FOOD_HEIGHT - SNAKE_SPEED);
+                    food.set_x(previous.0);
+                    previous = (food.get_x().unwrap(), food.get_y().unwrap());
                 }
+            },
+            SnakeDirection::Intial => {
+                
             }
         }
     }
 
     pub fn new() -> Self {
         Snake {
-            head_x: Cell::new(128 - FOOD_WIDTH),
-            head_y: Cell::new(128 - FOOD_HEIGHT),
-            direction: Cell::new(SnakeDirection::Left),
+            head_x: Cell::new(((GAME_WIDTH / 2) as u16) - FOOD_WIDTH),
+            head_y: Cell::new(((GAME_HEIGHT / 2) as u16) - FOOD_HEIGHT),
+            direction: Cell::new(SnakeDirection::Intial),
             food_eaten: RefCell::new(Vec::new()),
         }
     }
 }
 
 struct Point {
-    x: u8,
-    y: u8,
+    x: u16,
+    y: u16,
 }
 
 impl Point {
-    fn new(x: u8, y: u8) -> Self {
+    fn new(x: u16, y: u16) -> Self {
         Point { x, y }
     }
 }

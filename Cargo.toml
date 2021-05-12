@@ -8,4 +8,5 @@ edition = "2018"
 
 [dependencies]
 piston_window = "0.106.0"
+find_folder = "*"
 rand = "0.7.3"
