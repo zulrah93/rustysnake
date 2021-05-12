@@ -4,11 +4,11 @@ use piston_window::{clear, rectangle, G2d};
 use std::cell::{Cell, RefCell};
 use std::vec::Vec;
 
-pub const SNAKE_SPEED: u16 = 8; // How many pixels to move the snake each frame
+pub const SNAKE_SPEED: u16 = 25; // How many pixels to move the snake each frame
 const CLEAR_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 255.0];
 
-pub const GAME_WIDTH: u32 = 1024;
-pub const GAME_HEIGHT: u32 = 1024;
+pub const GAME_WIDTH: u32 = 1000;
+pub const GAME_HEIGHT: u32 = 1000;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub enum SnakeDirection {
@@ -23,7 +23,7 @@ pub struct Snake {
     head_x: Cell<u16>,
     head_y: Cell<u16>,
     direction: Cell<SnakeDirection>,
-    food_eaten: RefCell<Vec<Food>>,
+    food_eaten: RefCell<Vec<Food>>
 }
 
 impl Snake {
@@ -219,7 +219,7 @@ impl Snake {
             head_x: Cell::new(((GAME_WIDTH / 2) as u16) - FOOD_WIDTH),
             head_y: Cell::new(((GAME_HEIGHT / 2) as u16) - FOOD_HEIGHT),
             direction: Cell::new(SnakeDirection::Intial),
-            food_eaten: RefCell::new(Vec::new()),
+            food_eaten: RefCell::new(Vec::new())
         }
     }
 }
@@ -259,8 +259,8 @@ fn test_bounding_box() {
 #[test]
 fn test_collision_wall() {
     let snake = Snake::new();
-    snake.head_x.set(2);
-    snake.head_y.set(2);
+    snake.head_x.set(SNAKE_SPEED+2);
+    snake.head_y.set(SNAKE_SPEED+2);
     assert_eq!(false, snake.has_collided_with_any_wall());
     snake.set_direction(SnakeDirection::Left);
     snake.walk();
