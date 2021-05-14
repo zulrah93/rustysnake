@@ -7,7 +7,7 @@ pub const FOOD_HEIGHT: u16 = 25;
 pub const FOOD_COLOR: [f32; 4] = [255.0, 0.0, 0.0, 255.0]; // Red like an 🍎
 pub const SNAKE_COLOR: [f32; 4] = [0.0, 255.0, 0.0, 255.0]; // Green
 
-#[derive(Clone)]
+#[derive(Clone,Debug)]
 pub struct Food {
     x: Option<u16>,
     y: Option<u16>,
@@ -42,6 +42,20 @@ impl Food {
         self.y.replace(y);
     }
 
+    pub fn equal(&self, x1 : u16, y1 : u16) -> bool {
+        if let Some(x2) = self.get_x() {
+            if let Some(y2) = self.get_y() {
+                return x1 == x2 && y1 == y2;
+            }
+            else {
+                return false;
+            }
+        }
+        else {
+            return false;
+        }
+    }
+
     pub fn render(&self, transform: &Matrix2d, graphics: &mut G2d, part_of_snake : bool) {
         if let Some(x) = self.x {
             if let Some(y) = self.y {
@@ -51,7 +65,7 @@ impl Food {
                     } else {
                         FOOD_COLOR
                     },
-                    [x as f64, y as f64, FOOD_WIDTH as f64, FOOD_HEIGHT as f64],
+                    [(x * FOOD_WIDTH) as f64, (y * FOOD_HEIGHT) as f64, FOOD_WIDTH as f64, FOOD_HEIGHT as f64],
                     *transform,
                     graphics,
                 );
