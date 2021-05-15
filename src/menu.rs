@@ -8,7 +8,7 @@ use std::collections::HashMap;
 
 const GREEN: [f32; 4] = [0.0, 255.0, 0.0, 255.0]; // Green
 
-pub type MenuOptionCallback = fn(event: &Event, snake: &Snake, food: &mut Food);
+pub type MenuOptionCallback = fn(snake: &Snake, food: &mut Food);
 pub type RenderCallback = fn(
     transform: &Matrix2d,
     graphics: &mut G2d,
@@ -43,7 +43,7 @@ impl Menu {
         let new_value = if self.option_index.get() == 0 {
             3
         } else {
-            self.option_index.get() -1
+            self.option_index.get() - 1
         };
         self.option_index.set(new_value);
     }
@@ -51,6 +51,14 @@ impl Menu {
     pub fn enter(&self) {
         self.currently_selected_state
             .set(convert_index_to_menuoption(self.option_index.get()));
+    }
+
+    pub fn is_in_game(&self) -> bool {
+        if let Some(state) = self.currently_selected_state.get() {
+            state != MenuOption::ExitGame
+        } else {
+            false
+        }
     }
 
     pub fn map_option_to_state(&self, option: MenuOption, state: MenuOptionCallback) {
@@ -63,10 +71,10 @@ impl Menu {
         states.insert(option, state);
     }
 
-    pub fn execute_state(&self, event: &Event, snake: &Snake, food: &mut Food) {
+    pub fn execute_state(&self, snake: &Snake, food: &mut Food) {
         if let Some(option) = self.currently_selected_state.get() {
             let states = self.states_reference.borrow();
-            states[&option](event, snake, food); // Call the callback
+            states[&option](snake, food);
         }
     }
 

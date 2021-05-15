@@ -39,7 +39,7 @@ fn main() {
         .load_font(assets.join("FiraSans-Regular.ttf"))
         .unwrap();
     let menu = Menu::new();
-    menu.map_option_to_state(MenuOption::ExitGame, |_e, _s, _f| exit(0));
+    menu.map_option_to_state(MenuOption::ExitGame, |_s, _f| exit(0));
     menu.map_option_to_state(MenuOption::SinglePlayer, single_player_game);
     menu.map_option_to_state(
         MenuOption::MultiPlayerExistingRoom,
@@ -59,51 +59,57 @@ fn main() {
         render_multipler_player_game_random_match,
     );
     while let Some(e) = window.next() {
+        // Event loop
         if let Some(button) = e.press_args() {
             use piston_window::Button::Keyboard;
-            match button {
-                Keyboard(Key::Up) => {
-                    menu.decrement_menu();
+            if menu.is_in_game() {
+                if let Some(button) = e.press_args() {
+                    match button {
+                        Keyboard(Key::Up) => {
+                            snake.set_direction(SnakeDirection::Up);
+                        }
+                        Keyboard(Key::Down) => {
+                            snake.set_direction(SnakeDirection::Down);
+                        }
+                        Keyboard(Key::Left) => {
+                            snake.set_direction(SnakeDirection::Left);
+                        }
+                        Keyboard(Key::Right) => {
+                            snake.set_direction(SnakeDirection::Right);
+                        }
+                        Keyboard(Key::Space) => {
+                            snake.toggle_acceleration();
+                        }
+                        _ => {}
+                    }
                 }
-                Keyboard(Key::Down) => {
-                    menu.increment_menu();
+            } else {
+                match button {
+                    Keyboard(Key::Up) => {
+                        menu.decrement_menu();
+                    }
+                    Keyboard(Key::Down) => {
+                        menu.increment_menu();
+                    }
+                    Keyboard(Key::Space) => {
+                        menu.enter();
+                    }
+                    _ => {}
                 }
-                Keyboard(Key::Space) => {
-                    menu.enter();
-                }
-                _ => {}
             }
         }
         window.draw_2d(&e, |c, g, d| {
+            // Game loop
+            menu.execute_state(&snake, &mut food);
             clear(CLEAR_COLOR, g);
-            menu.execute_state(&e, &snake, &mut food);
             menu.execute_render_state(&c.transform, g, &mut glyphs, &c.draw_state, &snake, &food);
             glyphs.factory.encoder.flush(d);
         });
     }
 }
 
-fn single_player_game(e: &Event, snake: &Snake, food: &mut Food) {
+fn single_player_game(snake: &Snake, food: &mut Food) {
     let mut rng = unsafe { RANDOM.unwrap() };
-    if let Some(button) = e.press_args() {
-        use piston_window::Button::Keyboard;
-        match button {
-            Keyboard(Key::Up) => {
-                println!("up");
-                snake.set_direction(SnakeDirection::Up);
-            }
-            Keyboard(Key::Down) => {
-                snake.set_direction(SnakeDirection::Down);
-            }
-            Keyboard(Key::Left) => {
-                snake.set_direction(SnakeDirection::Left);
-            }
-            Keyboard(Key::Right) => {
-                snake.set_direction(SnakeDirection::Right);
-            }
-            _ => {}
-        }
-    }
     if snake.has_collided_with_any_wall() || snake.ate_itself() {
         println!("Game Over!");
         exit(0);
@@ -121,10 +127,10 @@ fn single_player_game(e: &Event, snake: &Snake, food: &mut Food) {
 }
 
 #[allow(dead_code)]
-fn multipler_player_game_existing_match(_e: &Event, _snake: &Snake, _food: &mut Food) {}
+fn multipler_player_game_existing_match(_snake: &Snake, _food: &mut Food) {}
 
 #[allow(dead_code)]
-fn multipler_player_game_random_match(_e: &Event, _snake: &Snake, _food: &mut Food) {}
+fn multipler_player_game_random_match(_snake: &Snake, _food: &mut Food) {}
 
 use piston_window::math::Matrix2d;
 fn render_single_player_game(

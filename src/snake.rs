@@ -22,6 +22,7 @@ pub enum SnakeDirection {
 pub struct Snake {
     direction: Cell<SnakeDirection>,
     body: RefCell<Vec<Food>>,
+    accelerate : Cell<bool>
 }
 
 impl Snake {
@@ -73,8 +74,13 @@ impl Snake {
 
     pub fn set_direction(&self, direction: SnakeDirection) {
         let current_direction = self.direction.get();
-        if (current_direction == SnakeDirection::Left || current_direction == SnakeDirection::Right)
+        if (current_direction == SnakeDirection::Left || current_direction == SnakeDirection::Right) // Don't allow moving from the opposite direction to avoid eating one self
             && (direction == SnakeDirection::Left || direction == SnakeDirection::Right)
+        {
+            return;
+        }
+        else if (current_direction == SnakeDirection::Up || current_direction == SnakeDirection::Down) 
+        && (direction == SnakeDirection::Up || direction == SnakeDirection::Down)
         {
             return;
         }
@@ -94,6 +100,10 @@ impl Snake {
         return false;
     }
 
+    pub fn toggle_acceleration(&self) {
+        self.accelerate.set(!self.accelerate.get());
+    }
+
     pub fn walk(&self, eating: bool) {
         // I want to use move for this method name but its a reserved word. Thanks Rust! 😂
         let mut body = self.body.borrow_mut();
@@ -105,8 +115,18 @@ impl Snake {
             SnakeDirection::Down => (0, 1),
             SnakeDirection::Intial => (0, 0),
         };
-        let new_x = (old_head.get_x().unwrap() as i16) + offset.0;
-        let new_y = (old_head.get_y().unwrap() as i16) + offset.1;
+        let new_x = (old_head.get_x().unwrap() as i16) + offset.0 + if self.accelerate.get() {
+            1 * offset.0
+        }
+        else {
+            0
+        };
+        let new_y = (old_head.get_y().unwrap() as i16) + offset.1 + if self.accelerate.get() {
+            1 * offset.1
+        }
+        else {
+            0
+        };
         body.insert(0, Food::new(new_x as u16, new_y as u16));
         if !eating {
             body.pop();
@@ -117,6 +137,7 @@ impl Snake {
         Snake {
             direction: Cell::new(SnakeDirection::Intial),
             body: RefCell::new(vec![Food::new(20, 20)]),
+            accelerate : Cell::new(false)
         }
     }
 }
