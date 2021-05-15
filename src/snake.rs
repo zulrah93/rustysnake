@@ -1,11 +1,10 @@
 use crate::food::*;
 use piston_window::math::Matrix2d;
-use piston_window::{clear, G2d};
+use piston_window::G2d;
 use std::cell::{Cell, RefCell};
 use std::vec::Vec;
 
 pub const SNAKE_SPEED: u16 = 20; // How many pixels to move the snake each frame
-const CLEAR_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 255.0];
 
 pub const GAME_WIDTH: u32 = 1000;
 pub const GAME_HEIGHT: u32 = 1000;
@@ -22,7 +21,7 @@ pub enum SnakeDirection {
 #[derive(Debug)]
 pub struct Snake {
     direction: Cell<SnakeDirection>,
-    body: RefCell<Vec<Food>>
+    body: RefCell<Vec<Food>>,
 }
 
 impl Snake {
@@ -42,7 +41,7 @@ impl Snake {
         // True if snake is in range to eat the food
         if let Some(x) = food.get_x() {
             if let Some(y) = food.get_y() {
-                 self.get_head_x() == x && self.get_head_y() == y
+                self.get_head_x() == x && self.get_head_y() == y
             } else {
                 false //y is None
             }
@@ -56,7 +55,9 @@ impl Snake {
         let y = self.get_head_y() as i16 * (FOOD_HEIGHT as i16);
         if (x - (SNAKE_SPEED as i16)) < 0 || (y - (SNAKE_SPEED as i16)) < 0 {
             true
-        } else if (x + (SNAKE_SPEED as i16)) > (GAME_WIDTH as i16) || (y + (SNAKE_SPEED as i16)) > (GAME_HEIGHT as i16) {
+        } else if (x + (SNAKE_SPEED as i16)) > (GAME_WIDTH as i16)
+            || (y + (SNAKE_SPEED as i16)) > (GAME_HEIGHT as i16)
+        {
             true
         } else {
             false
@@ -64,8 +65,6 @@ impl Snake {
     }
 
     pub fn render(&self, transform: &Matrix2d, graphics: &mut G2d) {
-        //Render snake but clear the screen first
-        clear(CLEAR_COLOR, graphics);
         let body = self.body.borrow();
         for part in body.iter() {
             part.render(transform, graphics, true);
@@ -74,7 +73,9 @@ impl Snake {
 
     pub fn set_direction(&self, direction: SnakeDirection) {
         let current_direction = self.direction.get();
-        if (current_direction == SnakeDirection::Left || current_direction == SnakeDirection::Right) && (direction == SnakeDirection::Left || direction == SnakeDirection::Right)   {
+        if (current_direction == SnakeDirection::Left || current_direction == SnakeDirection::Right)
+            && (direction == SnakeDirection::Left || direction == SnakeDirection::Right)
+        {
             return;
         }
         self.direction.set(direction);
@@ -86,33 +87,23 @@ impl Snake {
         let body = self.body.borrow_mut();
         for i in 1..body.len() {
             let current_part = &body[i];
-            if current_part.equal(x,y) {
+            if current_part.equal(x, y) {
                 return true;
             }
         }
         return false;
     }
 
-    pub fn walk(&self, eating : bool) {
+    pub fn walk(&self, eating: bool) {
         // I want to use move for this method name but its a reserved word. Thanks Rust! 😂
         let mut body = self.body.borrow_mut();
         let old_head = body[0].clone();
-        let offset : (i16, i16) = match self.direction.get() {
-            SnakeDirection::Left => {
-                (-1, 0)
-            },
-            SnakeDirection::Right => {
-                (1, 0)
-            },
-            SnakeDirection::Up => {
-                (0, -1)
-            },
-            SnakeDirection::Down => {
-                (0, 1)
-            },
-            SnakeDirection::Intial => {
-                (0, 0)
-            }
+        let offset: (i16, i16) = match self.direction.get() {
+            SnakeDirection::Left => (-1, 0),
+            SnakeDirection::Right => (1, 0),
+            SnakeDirection::Up => (0, -1),
+            SnakeDirection::Down => (0, 1),
+            SnakeDirection::Intial => (0, 0),
         };
         let new_x = (old_head.get_x().unwrap() as i16) + offset.0;
         let new_y = (old_head.get_y().unwrap() as i16) + offset.1;
@@ -125,7 +116,7 @@ impl Snake {
     pub fn new() -> Self {
         Snake {
             direction: Cell::new(SnakeDirection::Intial),
-            body: RefCell::new(vec![Food::new(20,20)])
+            body: RefCell::new(vec![Food::new(20, 20)]),
         }
     }
 }
