@@ -1,5 +1,7 @@
 # Rusty Snake
 
+[![Build Status](https://github.com/zulrah93/rustysnake/actions/workflows/rust.yml/badge.svg)](https://github.com/zulrah93/rustysnake/actions/workflows/rust.yml) [![License: CC0-1.0](https://licensebuttons.net/l/zero/1.0/80x15.png)](http://creativecommons.org/publicdomain/zero/1.0/)
+
 ## Project Description
 
 The classic snake game implementation in Rust using the Piston game engine. With a multiplayer feature in the near future.
