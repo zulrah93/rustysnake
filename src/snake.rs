@@ -161,6 +161,8 @@ fn test_snake_direction() {
     let snake = Snake::new();
     snake.set_direction(SnakeDirection::Up);
     assert_eq!(SnakeDirection::Up, snake.direction.get());
-    snake.set_direction(SnakeDirection::Down);
-    assert_eq!(SnakeDirection::Down, snake.direction.get());
+    snake.set_direction(SnakeDirection::Left);
+    assert_eq!(SnakeDirection::Left, snake.direction.get());
+    snake.set_direction(SnakeDirection::Right);
+    assert_eq!(SnakeDirection::Left, snake.direction.get())
 }

@@ -11,7 +11,7 @@ use menu::{Menu, MenuOption};
 use rand::{thread_rng, Rng};
 use snake::{Snake, SnakeDirection, GAME_HEIGHT, GAME_WIDTH};
 use std::process::exit;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 pub const WHITE: [f32; 4] = [255.0, 255.0, 255.0, 255.0];
 const CLEAR_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 255.0];
