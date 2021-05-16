@@ -11,11 +11,13 @@ use menu::{Menu, MenuOption};
 use rand::{thread_rng, Rng};
 use snake::{Snake, SnakeDirection, GAME_HEIGHT, GAME_WIDTH};
 use std::process::exit;
+use std::time::{Duration, Instant};
 
 pub const WHITE: [f32; 4] = [255.0, 255.0, 255.0, 255.0];
 const CLEAR_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 255.0];
 static mut RANDOM: Option<rand::prelude::ThreadRng> = None;
 static mut SCORE: u32 = 0;
+static mut TIME : Option<Instant> = None;
 
 fn main() {
     let snake = Snake::new();
@@ -110,6 +112,13 @@ fn main() {
 
 fn single_player_game(snake: &Snake, food: &mut Food) {
     let mut rng = unsafe { RANDOM.unwrap() };
+
+    unsafe {
+        if TIME == None {
+            TIME.replace(Instant::now());
+        }
+    }
+    
     if snake.has_collided_with_any_wall() || snake.ate_itself() {
         println!("Game Over!");
         exit(0);
@@ -118,7 +127,16 @@ fn single_player_game(snake: &Snake, food: &mut Food) {
         food.set_x(rng.gen::<u16>() % ((GAME_WIDTH / (FOOD_WIDTH as u32)) as u16));
         food.set_y(rng.gen::<u16>() % ((GAME_HEIGHT / (FOOD_HEIGHT as u32)) as u16));
         unsafe {
-            SCORE += 100;
+            let duration = TIME.unwrap().elapsed();
+            let elapsed_seconds = duration.as_secs();
+            let calculated_score = 100 - elapsed_seconds * 5;
+            SCORE += if elapsed_seconds * 5 > 100 {
+                0
+            }
+            else {
+              calculated_score as u32  
+            };
+            TIME.replace(Instant::now());
         }
         snake.walk(true);
     } else {
